@@ -6,7 +6,7 @@ exports.signup = (req, res, next) => {
   console.log(req.body); // Pour voir les données envoyées depuis le frontend
   bcrypt.hash(req.body.password, 10)
     .then(hash => {
-      const user = new User({
+      const user = new User({ //utiliser clé .env et retirer le env du git, entropy
         email: req.body.email,
         password: hash
       });
