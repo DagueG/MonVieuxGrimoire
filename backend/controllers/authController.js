@@ -1,20 +1,27 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const zxcvbn = require('zxcvbn');
 
 exports.signup = (req, res, next) => {
+  const passwordStrength = zxcvbn(req.body.password);
+
+  if (passwordStrength.score < 3) {
+    return res.status(400).json({ message: 'Le mot de passe est trop faible.' });
+  }
+
   bcrypt.hash(req.body.password, 10)
     .then(hash => {
-      const user = new User({ //utiliser clé .env et retirer le env du git, entropy
+      const user = new User({
         email: req.body.email,
         password: hash
       });
       user.save()
-        .then(() => res.status(201).json({ message: 'User created!' }))
+        .then(() => res.status(201).json({ message: 'Utilisateur créé avec succès !' }))
         .catch(error => {
           console.error('Erreur lors de la création de l\'utilisateur:', error);
           res.status(400).json({ error });
-        })
+        });
     })
     .catch(error => res.status(500).json({ error }));
 };

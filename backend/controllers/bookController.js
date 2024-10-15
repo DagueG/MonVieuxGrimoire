@@ -2,23 +2,19 @@ const Book = require('../models/Book');
 const fs = require('fs');
 
 exports.createBook = (req, res, next) => {
-  // Conversion de l'objet JSON envoyé avec les informations du livre
   const bookObject = JSON.parse(req.body.book);
 
-  // Création d'une nouvelle instance du livre avec les données fournies
   const book = new Book({
     ...bookObject,
-    userId: req.userData.userId,  // Enregistre l'ID de l'utilisateur
-    imageUrl: `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`  // Enregistre l'URL de l'image avec 'uploads'
+    userId: req.userData.userId,
+    imageUrl: `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
   });
 
-  // Sauvegarde du livre dans la base de données
   book.save()
     .then(() => res.status(201).json({ message: 'Book added successfully!' }))
     .catch(error => res.status(400).json({ error }));
 };
 
-// Récupérer tous les livres dans la base de données
 exports.getAllBooks = (req, res, next) => {
   Book.find()
     .then(books => res.status(200).json(books))
@@ -26,7 +22,7 @@ exports.getAllBooks = (req, res, next) => {
 };
 
 exports.getBookById = (req, res, next) => {
-  const bookId = req.params.id;  // Récupère l'ID du livre depuis l'URL
+  const bookId = req.params.id;
   Book.findById(bookId)
     .then(book => {
       if (!book) {
@@ -56,7 +52,6 @@ exports.deleteBook = (req, res, next) => {
       if (!book) {
         return res.status(404).json({ message: 'Livre non trouvé !' });
       }
-      // Supprimer le fichier image lié au livre
       const filename = book.imageUrl.split('/uploads/')[1];
       fs.unlink(`uploads/${filename}`, () => {
         Book.deleteOne({ _id: bookId })
@@ -77,19 +72,21 @@ exports.rateBook = (req, res, next) => {
         return res.status(404).json({ message: 'Livre non trouvé !' });
       }
 
-      // Ajouter la nouvelle note
-      book.ratings.push({ userId: req.userData.userId, grade: rating });
+      const existingRating = book.ratings.find(rating => rating.userId === req.userData.userId);
 
-      // Calculer la nouvelle moyenne des notes
+      if (existingRating) {
+        existingRating.grade = rating;
+      } else {
+        book.ratings.push({ userId: req.userData.userId, grade: rating });
+      }
+
       const totalRatings = book.ratings.length;
       const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
       book.averageRating = sumRatings / totalRatings;
 
-      // Sauvegarder les modifications
       return book.save();
     })
     .then(updatedBook => {
-      // Renvoie le livre mis à jour
       res.status(200).json(updatedBook);
     })
     .catch(error => res.status(500).json({ error }));
