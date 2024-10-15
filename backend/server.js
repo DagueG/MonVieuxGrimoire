@@ -14,6 +14,8 @@ app.use(express.json());
 // Configurer CORS pour autoriser les requêtes depuis le front-end
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
+app.use('/uploads', express.static('uploads'));
+
 // Connexion à MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,

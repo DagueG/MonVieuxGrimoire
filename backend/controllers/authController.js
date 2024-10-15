@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 exports.signup = (req, res, next) => {
-  console.log(req.body); // Pour voir les données envoyées depuis le frontend
   bcrypt.hash(req.body.password, 10)
     .then(hash => {
       const user = new User({ //utiliser clé .env et retirer le env du git, entropy
@@ -13,7 +12,7 @@ exports.signup = (req, res, next) => {
       user.save()
         .then(() => res.status(201).json({ message: 'User created!' }))
         .catch(error => {
-          console.error('Erreur lors de la création de l\'utilisateur:', error); // Ceci devrait afficher l'erreur
+          console.error('Erreur lors de la création de l\'utilisateur:', error);
           res.status(400).json({ error });
         })
     })
